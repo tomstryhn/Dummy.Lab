@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Format views for DummyLab typed objects. Table view is the default for
+  multi-object listings; custom view handles single-object banner rendering.
+  Covers DLab.GoldenImage, DLab.Lab, DLab.VM, DLab.Network, DLab.Operation,
+  DLab.Event, DLab.HealthStatus, DLab.HealthCheck, and DLab.Metrics.
+-->
+<Configuration>
+  <ViewDefinitions>
+
+    <View>
+      <Name>DLab.Lab.Table</Name>
+      <ViewSelectedBy><TypeName>DLab.Lab</TypeName></ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Name</Label><Width>16</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Domain</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>OS</Label><Width>14</Width></TableColumnHeader>
+          <TableColumnHeader><Label>VMs</Label><Width>5</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Status</Label><Width>10</Width></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>DomainName</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>OSKey</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>@($_.VMs).Count</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Status</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DLab.VM.Table</Name>
+      <ViewSelectedBy><TypeName>DLab.VM</TypeName></ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Lab</Label><Width>14</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Name</Label><Width>22</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Role</Label><Width>6</Width></TableColumnHeader>
+          <TableColumnHeader><Label>IP</Label><Width>15</Width></TableColumnHeader>
+          <TableColumnHeader><Label>State</Label><Width>9</Width></TableColumnHeader>
+          <TableColumnHeader><Label>vCPU</Label><Width>5</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Mem(GB)</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Status</Label><Width>9</Width></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>LabName</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Role</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>IP</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>State</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>ProcessorCount</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>MemoryGB</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Status</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DLab.Network.Table</Name>
+      <ViewSelectedBy><TypeName>DLab.Network</TypeName></ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Lab</Label><Width>14</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Switch</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Type</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Subnet</Label><Width>18</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Gateway</Label><Width>15</Width></TableColumnHeader>
+          <TableColumnHeader><Label>DC</Label><Width>15</Width></TableColumnHeader>
+          <TableColumnHeader><Label>NAT</Label><Width>5</Width></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>LabName</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>SwitchName</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>SwitchType</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Subnet</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Gateway</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>DCIP</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.NATEnabled) { 'On' } else { 'Off' }</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DLab.GoldenImage.Table</Name>
+      <ViewSelectedBy><TypeName>DLab.GoldenImage</TypeName></ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>OSKey</Label><Width>14</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Image</Label><Width>44</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Size(GB)</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Built</Label><Width>11</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Patched</Label><Width>7</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Protected</Label><Width>9</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Latest</Label><Width>6</Width></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>OSKey</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>ImageName</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>SizeGB</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.BuildDate) { $_.BuildDate.ToString('yyyy-MM-dd') } else { '' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Patched) { 'Yes' } else { 'No' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Protected) { 'Yes' } else { 'No' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.PointerPath) { 'Yes' } else { '' }</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DLab.Operation.Table</Name>
+      <ViewSelectedBy><TypeName>DLab.Operation</TypeName></ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Started</Label><Width>19</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Kind</Label><Width>22</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Target</Label><Width>22</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Status</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Duration(s)</Label><Width>11</Width><Alignment>Right</Alignment></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><ScriptBlock>if ($_.StartedAt) { $_.StartedAt.ToString('yyyy-MM-dd HH:mm:ss') } else { '' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Kind</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Target</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Status</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>DurationSec</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DLab.Event.Table</Name>
+      <ViewSelectedBy><TypeName>DLab.Event</TypeName></ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Timestamp</Label><Width>23</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Level</Label><Width>6</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Source</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Message</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><ScriptBlock>if ($_.Timestamp) { $_.Timestamp.ToString('yyyy-MM-dd HH:mm:ss.fff') } else { '' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><PropertyName>Level</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Source</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Message</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DLab.CatalogEntry.Table</Name>
+      <ViewSelectedBy><TypeName>DLab.CatalogEntry</TypeName></ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>OSKey</Label><Width>18</Width></TableColumnHeader>
+          <TableColumnHeader><Label>DisplayName</Label><Width>40</Width></TableColumnHeader>
+          <TableColumnHeader><Label>GoldenPrefix</Label><Width>18</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Mem(GB)</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>CPU</Label><Width>4</Width><Alignment>Right</Alignment></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>OSKey</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>DisplayName</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>GoldenPrefix</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>DefaultMemoryGB</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>DefaultCPU</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DLab.HealthStatus.Table</Name>
+      <ViewSelectedBy><TypeName>DLab.HealthStatus</TypeName></ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Target</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Overall</Label><Width>11</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Timestamp</Label><Width>23</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Checks</Label><Width>7</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Healthy</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Target</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>OverallStatus</PropertyName></TableColumnItem>
+              <TableColumnItem><ScriptBlock>if ($_.Timestamp) { $_.Timestamp.ToString('yyyy-MM-dd HH:mm:ss') } else { '' }</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>@($_.Checks).Count</ScriptBlock></TableColumnItem>
+              <TableColumnItem><ScriptBlock>@($_.Checks | Where-Object Status -eq 'Healthy').Count</ScriptBlock></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DLab.HealthCheck.Table</Name>
+      <ViewSelectedBy><TypeName>DLab.HealthCheck</TypeName></ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Name</Label><Width>38</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Status</Label><Width>10</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Message</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Name</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Status</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Message</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DLab.KindMetric.Table</Name>
+      <ViewSelectedBy><TypeName>DLab.KindMetric</TypeName></ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Kind</Label><Width>24</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Total</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>OK</Label><Width>4</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Fail</Label><Width>5</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>AvgSec</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>MaxSec</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Kind</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Total</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Succeeded</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Failed</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>AvgSec</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>MaxSec</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>DLab.StepMetric.Table</Name>
+      <ViewSelectedBy><TypeName>DLab.StepMetric</TypeName></ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>StepName</Label><Width>34</Width></TableColumnHeader>
+          <TableColumnHeader><Label>Count</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>AvgSec</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>MaxSec</Label><Width>8</Width><Alignment>Right</Alignment></TableColumnHeader>
+          <TableColumnHeader><Label>Fail%</Label><Width>6</Width><Alignment>Right</Alignment></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>StepName</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Count</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>AvgSec</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>MaxSec</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>FailedRate</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+  </ViewDefinitions>
+</Configuration>

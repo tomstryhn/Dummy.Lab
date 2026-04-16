@@ -1,0 +1,26 @@
+# Build output - assembled by Scripts/Build-DummyLab.ps1 at install time.
+Scripts/Modules/DummyLab/DummyLab.psm1
+Scripts/Modules/DummyLab/DummyLab.psd1
+Scripts/Modules/DummyLab/DummyLab.Format.ps1xml
+Scripts/Modules/DummyLab/DLab.Defaults.psd1
+docs/TEST-GUIDE.md
+
+# Runtime state (only ever appears in C:\Dummy.Lab install, not the repo,
+# but belt-and-braces in case someone points the install at the repo root).
+Events/
+Operations/
+Reports/
+Labs/
+GoldenImages/*.vhdx
+ISOs/*.iso
+
+# Editor / OS artefacts
+.vs/
+.vscode/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+
+# PowerShell script analysis output
+PSScriptAnalyzerResults.xml

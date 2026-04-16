@@ -1,0 +1,232 @@
+{
+  "project": {
+    "name": "Dummy.Lab",
+    "version": "1.0.0",
+    "author": "Tom Stryhn",
+    "repository": "https://github.com/tomstryhn/Dummy.Lab",
+    "license": "CC BY-NC 4.0",
+    "description": "Hyper-V lab automation platform. Composable PowerShell cmdlets for building, inspecting, and monitoring isolated Windows Server AD lab environments.",
+    "target_audience": ["security developers", "hardening specialists", "IT operations", "lab testers"],
+    "requires": {
+      "os": ["Windows 10", "Windows 11", "Windows Server 2016+"],
+      "powershell": "5.1+",
+      "roles": ["Hyper-V"],
+      "privileges": "Administrator",
+      "ram_min_gb": 4,
+      "ram_recommended_gb": 8,
+      "disk_min_gb": 100
+    }
+  },
+  "structure": {
+    "entry_points": [
+      {
+        "file": "Install-Dummy.Lab.ps1",
+        "description": "Bootstrap installer. Downloads from GitHub (or uses LocalSource), validates prerequisites, extracts the project, runs the module build, prints next steps.",
+        "usage": "Invoke-Expression (Invoke-WebRequest 'https://raw.githubusercontent.com/tomstryhn/Dummy.Lab/main/Install-Dummy.Lab.ps1' -UseBasicParsing).Content"
+      },
+      {
+        "file": "DLab.ps1",
+        "description": "In-terminal cheat-sheet printer. Prints the exact DummyLab cmdlet commands for common workflows. Does not execute lab operations.",
+        "usage": ".\\DLab.ps1 [quickstart|all|build|lab|health|teardown|report]"
+      },
+      {
+        "file": "Scripts/Build-DummyLab.ps1",
+        "description": "Assembles Scripts/src/DummyLab/ source files into Scripts/Modules/DummyLab/ (single module).",
+        "usage": ".\\Scripts\\Build-DummyLab.ps1 [-Validate] [-Clean]"
+      }
+    ],
+    "module": {
+      "name": "DummyLab",
+      "source": "Scripts/src/DummyLab/",
+      "built": "Scripts/Modules/DummyLab/",
+      "description": "Single module. 51 public cmdlets covering configuration, state, network, storage, host preflight, VM lifecycle, guest execution, golden images, composition, and observability.",
+      "layout": {
+        "DummyLab.psd1": "Module manifest (source copy, copied to built output).",
+        "Config/DLab.Defaults.psd1": "Bundled default configuration.",
+        "Formats/DummyLab.Format.ps1xml": "Typed output formatter.",
+        "Public/": "Exported cmdlets. One function per file.",
+        "Private/": "Internal helpers. One function per file. Assembled into the .psm1 before the public section."
+      }
+    },
+    "cmdlet_tiers": {
+      "config_and_discovery": ["Get-DLabConfig", "Set-DLabConfig", "Test-DLabConfig", "Get-DLabCatalog", "Find-DLabISO", "Get-DLabISOCatalog"],
+      "inventory": ["Get-DLab", "Get-DLabVM", "Get-DLabNetwork", "Get-DLabGoldenImage"],
+      "state": ["Get-DLabState", "Update-DLabState", "New-DLabVMSlot", "Complete-DLabVMSlot", "Remove-DLabVMSlot"],
+      "network": ["Get-DLabNetworkConfig", "Get-DLabNAT", "Find-DLabFreeSubnet", "New-DLabSwitch", "Remove-DLabSwitch", "Set-DLabNAT", "Remove-DLabNAT"],
+      "storage": ["New-DLabVHDX", "Optimize-DLabVHDX", "New-DLabDifferencingDisk"],
+      "preflight": ["Test-DLabHost", "Invoke-DLabPreflight"],
+      "vm": ["New-DLabVM", "Start-DLabVM", "Stop-DLabVM", "Wait-DLabVM", "New-DLabCheckpoint", "Test-DLabVM"],
+      "guest": ["Send-DLabGuestFile", "Invoke-DLabGuestScript"],
+      "golden_image": ["New-DLabGoldenImage", "Remove-DLabGoldenImage", "Protect-DLabGoldenImage", "Test-DLabGoldenImage", "Import-DLabGoldenImage", "Export-DLabGoldenImage"],
+      "composition": ["New-DLab", "Add-DLabVM", "Remove-DLabVM", "Remove-DLab", "Test-DLab"],
+      "observability": ["Get-DLabOperation", "Get-DLabEventLog", "Watch-DLabOperation", "Get-DLabMetrics", "Export-DLabReport"]
+    },
+    "build_phases": {
+      "description": "New-DLabGoldenImage is implemented as six named phases. Each phase is wrapped in a DLab.OperationStep so failed runs can be diagnosed down to the exact phase.",
+      "phases": [
+        {"name": "Plan",     "helper": "Resolve-GoldenImagePlan",    "role": "Resolve OS key, ISO, paths; short-circuit if already built today."},
+        {"name": "ApplyWIM", "helper": "New-GoldenImageVHDX",        "role": "Create VHDX from ISO with unattend injection."},
+        {"name": "Boot",     "helper": "Start-GoldenImageBuildVM",   "role": "Temp switch and NAT, create VM, wait for PowerShell Direct, verify internet."},
+        {"name": "Patch",    "helper": "Invoke-GoldenImageUpdate",   "role": "Windows Update rounds. Skipped when -SkipUpdates."},
+        {"name": "Sysprep",  "helper": "Invoke-GoldenImageSysprep",  "role": "Guest cleanup + sysprep + shutdown."},
+        {"name": "Finalize", "helper": "Complete-GoldenImageBuild",  "role": "Teardown temp resources, compact VHDX, protect, update pointer."}
+      ]
+    },
+    "guest_scripts": [
+      {
+        "file": "Scripts/GuestScripts/Install-DC.ps1",
+        "description": "Domain Controller promotion state machine (install AD DS, promote, post-config).",
+        "runs_in": "VM via PowerShell Direct",
+        "role": "DC",
+        "reboots": 1,
+        "idempotent": true
+      },
+      {
+        "file": "Scripts/GuestScripts/Install-DHCP.ps1",
+        "description": "DHCP server setup on the Domain Controller.",
+        "runs_in": "VM via PowerShell Direct",
+        "role": "DC",
+        "reboots": 0,
+        "idempotent": true
+      },
+      {
+        "file": "Scripts/GuestScripts/Install-MemberServer.ps1",
+        "description": "Member server static IP configuration and domain join.",
+        "runs_in": "VM via PowerShell Direct",
+        "role": "Server",
+        "reboots": 1,
+        "idempotent": false
+      },
+      {
+        "file": "Scripts/GuestScripts/Add-LabUsers.ps1",
+        "description": "Optional test OUs, users, and groups in AD.",
+        "runs_in": "VM via PowerShell Direct",
+        "role": "DC",
+        "reboots": 0,
+        "idempotent": true
+      },
+      {
+        "file": "Scripts/GuestScripts/Invoke-GoldenImagePrep.ps1",
+        "description": "Windows Update, disk cleanup, sysprep. For golden image creation.",
+        "runs_in": "VM via PowerShell Direct",
+        "role": "Golden",
+        "reboots": "multiple (update rounds)",
+        "idempotent": false
+      }
+    ],
+    "config_files": [
+      {
+        "file": "Scripts/src/DummyLab/Config/DLab.Defaults.psd1",
+        "description": "Bundled defaults. Copied to the built module directory at build time. User overrides via %APPDATA%\\DummyLab\\config.psd1 or the DUMMYLAB_CONFIG environment variable.",
+        "user_editable": false
+      },
+      {
+        "file": "Scripts/Config/OS.Catalog.psd1",
+        "description": "OS definitions: WIM build numbers for ISO detection, image indexes, golden image naming, VM defaults.",
+        "user_editable": false,
+        "supported_os": ["WS2025", "WS2022", "WS2019", "WS2016"],
+        "iso_detection": "WIM metadata (BuildNumber from 10.0.BUILD.x version string) - works with Eval, VL, and renamed ISOs"
+      },
+      {
+        "file": "Scripts/Config/unattend-server.xml",
+        "description": "Windows unattend template for Server OS. Token-based, variables injected at runtime.",
+        "user_editable": false
+      }
+    ]
+  },
+  "workflows": {
+    "install": {
+      "description": "Fresh installation from GitHub.",
+      "steps": [
+        "Download Install-Dummy.Lab.ps1 via the one-liner.",
+        "Installer validates prerequisites (Hyper-V, Admin, RAM).",
+        "Installer downloads the project ZIP from GitHub.",
+        "Installer extracts to TargetPath.",
+        "Installer runs Scripts/Build-DummyLab.ps1 to assemble the module.",
+        "Installer prints next steps (Import-Module path, DLab.ps1 usage)."
+      ]
+    },
+    "build_golden_image": {
+      "description": "Build a sysprepped golden VHDX from an ISO.",
+      "entry": "New-DLabGoldenImage",
+      "steps": [
+        "Resolve OSKey against OS.Catalog.psd1.",
+        "Locate ISO (Find-DLabISO).",
+        "Apply WIM to a new VHDX, inject unattend, bcdboot.",
+        "Create temp VM, start, wait for PowerShell Direct.",
+        "Invoke-GoldenImagePrep.ps1 (updates, cleanup, sysprep).",
+        "Remove temp VM.",
+        "Protect the VHDX (read-only + deny-delete ACL).",
+        "Write pointer file so Get-DLabGoldenImage returns it as latest."
+      ],
+      "output": "{LabStorageRoot}\\GoldenImages\\{prefix}-{date}.vhdx"
+    },
+    "deploy_lab_dc": {
+      "description": "Create a new lab with its first Domain Controller.",
+      "entry": "New-DLab",
+      "steps": [
+        "Invoke-DLabPreflight (host and lab namespace checks).",
+        "Resolve network config (Get-DLabNetworkConfig).",
+        "Resolve golden image.",
+        "Create lab storage and state file.",
+        "New-DLabSwitch (Internal VMSwitch).",
+        "Set-DLabNAT (if EnableNAT).",
+        "Reserve DC slot, create differencing disk, register VM.",
+        "Start VM, wait for PowerShell Direct.",
+        "Invoke guest scripts: Install-DC.ps1, Install-DHCP.ps1.",
+        "Persist final state; mark operation succeeded."
+      ]
+    },
+    "add_member_server": {
+      "description": "Add a member server to an existing lab.",
+      "entry": "Add-DLabVM",
+      "steps": [
+        "Resolve golden image.",
+        "Reserve VM slot.",
+        "Create differencing disk with domain join in unattend.",
+        "Register and start VM, wait for PowerShell Direct.",
+        "Invoke guest script: Install-MemberServer.ps1.",
+        "Finalise slot and persist state."
+      ]
+    },
+    "teardown": {
+      "description": "Remove all lab resources. Operations and events survive.",
+      "entry": "Remove-DLab",
+      "removes": ["All VMs", "VMSwitch", "NetNat", "Lab storage folder (unless -KeepStorage)"],
+      "preserves": ["Golden images in GoldenImages\\", "ISOs", "Other labs", "Operation documents", "Event logs"]
+    }
+  },
+  "observability": {
+    "operation_store": "{LabStorageRoot}\\Operations\\{timestamp}-{lab}-{opid}.json",
+    "event_store": "{LabStorageRoot}\\Events\\dlab-events-{yyyy-MM}.jsonl",
+    "report_store": "{LabStorageRoot}\\Reports\\",
+    "survives_teardown": true,
+    "queryable_via": ["Get-DLabOperation", "Get-DLabEventLog", "Watch-DLabOperation", "Get-DLabMetrics", "Export-DLabReport"]
+  },
+  "network_defaults": {
+    "subnet_size": "/24",
+    "default_base": "10.104.25",
+    "auto_increment": true,
+    "gateway_octet": 1,
+    "dc_range": "5-19",
+    "member_range": "20-63",
+    "dhcp_range": "64-253"
+  },
+  "extension_points": {
+    "add_os": {
+      "description": "Add support for a new server OS.",
+      "steps": ["Place ISO in ISOs/ folder.", "Run Find-DLabISO to verify WIM build number detection.", "Add entry to Scripts/Config/OS.Catalog.psd1 (BuildNumber, ImageIndex, GoldenPrefix).", "Run New-DLabGoldenImage -OSKey <newkey>."],
+      "code_changes_required": false
+    },
+    "add_cmdlet": {
+      "description": "Add a new public cmdlet.",
+      "steps": ["Create Scripts/src/DummyLab/Public/{Verb}-DLab{Noun}.ps1.", "Add comment-based help.", "Add the function name to FunctionsToExport in DummyLab.psd1.", "Run Scripts/Build-DummyLab.ps1 -Validate."],
+      "code_changes_required": false
+    },
+    "add_guest_script": {
+      "description": "Add a new VM configuration script.",
+      "steps": ["Create Scripts/GuestScripts/YourScript.ps1 following the state-machine pattern.", "Reference from the appropriate deploy helper in Scripts/src/DummyLab/Private/Deploy-Lab*.ps1."],
+      "pattern_reference": "Scripts/GuestScripts/Install-DC.ps1"
+    }
+  }
+}
