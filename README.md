@@ -90,8 +90,6 @@ This is a tool for any operational or security engineer who likes to dig into th
 
 See the [documentation](docs/) for:
 - [DESIGN.md](docs/DESIGN.md) - module layout, storage, observability pipeline
-- [CMDLET-MAP.md](docs/CMDLET-MAP.md) - tiered cmdlet inventory and composition patterns
-- [TEST-GUIDE.md](docs/TEST-GUIDE.md) - end-to-end walkthrough from install to teardown
 - [SECURITY.md](docs/SECURITY.md) - credential handling and isolation model
 - [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) - common issues and recovery paths
 
